@@ -3,64 +3,78 @@ import java.sql.*;
 
 public class DB_Statements {
 
-    //  Declare a Statement
+    //    Declare a Statement
     private static Statement stmt = null;
-
-    //  Declare & create a connection
+    //    Declare a result set
+    private static ResultSet rs = null;
+    //    Declare a PreparedStatement
+    private static PreparedStatement pst = null;
+    //    Declare & create a connection
     private static Connection con = DB_Connector.connect();
 
-    //  Declare a result set
-    private static ResultSet rs = null;
 
-    //  Declare a PreparedStatement
-    private static PreparedStatement pst = null;
+    public void insertData() {
 
-    //Method for inserting Data to Database Table
-    public void insertData(){
-        Employee employee = new Employee(41, "Bubba", 5000.0);
-        String query1 = "insert into employees (emp) values(?)";
-        String query2 = "select * from employees";
+        Employee emp = new Employee(42, "Hubba", 5240.0);
+        String query = "insert into employees (emp) values(?)";
+
 
         try {
+            //  Take an Employee object and convert it to a Byte array
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(employee);
-
+            oos.writeObject(emp);
             byte[] employeeAsByte = baos.toByteArray();
 
-            pst = con.prepareStatement(query1);
+            //  Create a PreparedStatement
+            pst = con.prepareStatement(query);
 
+            //  Place the converted object into the input stream
             ByteArrayInputStream bais = new ByteArrayInputStream(employeeAsByte);
-
             pst.setBinaryStream(1, bais, employeeAsByte.length);
 
+            //  Execute the query
             pst.executeUpdate();
-            System.out.println("\n--Query 1 executed--");
+            System.out.println("\n--Insert executed--");
+
         }
-        catch (Exception ex){
+        //  Handle all possible exceptions
+        catch (Exception ex) {
             ex.printStackTrace();
-            System.out.println("\n--Query 1 did not execute--");
+            System.out.println("\n--Insert did not execute--");
         }
 
-        try {
-            stmt = con.createStatement();
-            //ResultSet for our Select query2
-            rs = stmt.executeQuery(query2);
 
-            while(rs.next()){
+
+    }
+
+    public void retrieveData() {
+
+        String query = "select * from employees";
+
+        try{
+            //  Create a Statement
+            stmt = con.createStatement();
+
+            //  Execute the ResultSet
+            rs = stmt.executeQuery(query);
+
+            //  Return all rows from the table
+            while(rs.next()) {
                 byte[] st = (byte[]) rs.getObject(2);
                 ByteArrayInputStream baip = new ByteArrayInputStream(st);
                 ObjectInputStream ois = new ObjectInputStream(baip);
                 Employee emp = (Employee) ois.readObject();
-                System.out.println(emp.toString());
+                System.out.println("\n" + emp.toString());
+
             }
 
             System.out.println("\n--Retrieve executed--");
         }
-        catch (Exception ex){
-            ex.printStackTrace();
+        //  Handle all possible exceptions
+        catch (Exception e) {
+            e.printStackTrace();
             System.out.println("\n--Retrieve did not execute--");
-
         }
     }
 }
